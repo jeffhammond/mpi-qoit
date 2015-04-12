@@ -1,12 +1,23 @@
 #include "driver.h"
 
+#ifdef _OPENMP
+#define OMP_PARALLEL_FOR _Pragma("omp parallel for schedule(static)")
+#else
+#define OMP_PARALLEL_FOR
+#endif
+
 int main(int argc, char * argv[])
 {
     /*********************************************************************************
      *                            INITIALIZE MPI
      *********************************************************************************/
 
-    int requested=MPI_THREAD_MULTIPLE, provided;
+#ifdef _OPENMP
+    int requested=MPI_THREAD_MULTIPLE;
+#else
+    int requested=MPI_THREAD_SINGLE;
+#endif
+    int provided;
     MPI_Init_thread( &argc, &argv, requested, &provided );
 
     int np, me;
@@ -43,17 +54,21 @@ int main(int argc, char * argv[])
         int tag = 0;
         double totaltime = 0.0;
         for (int r=0; r<reps; r++) {
+            OMP_PARALLEL_FOR
             for (int i=0; i<maxcount; i++) {
                 sbuf[i] = me;
             }
+            OMP_PARALLEL_FOR
             for (int i=0; i<maxcount; i++) {
                 rbuf[i] = -1;
             }
             MPI_Barrier(MPI_COMM_WORLD);
             double t0 = MPI_Wtime();
+            OMP_PARALLEL_FOR
             for (int i=0; i<n; i++) {
                 MPI_Irecv(&(rbuf[count*i]), count, MPI_INT, origin, tag, MPI_COMM_WORLD, &(reqs[i]));
                 MPI_Isend(&(sbuf[count*i]), count, MPI_INT, target, tag, MPI_COMM_WORLD, &(reqs[n+i]));
+                /* If we want to measure overlap, add computation here. */
             }
             MPI_Waitall(2*n, reqs, MPI_STATUSES_IGNORE);
             double t1 = MPI_Wtime();
@@ -74,8 +89,8 @@ int main(int argc, char * argv[])
         }
         totaltime /= reps; /* total time for one iteration */
         size_t bytes = count*sizeof(int);
-        printf("%d %zu byte messages in %e s - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
-                n, bytes, totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime);
+        printf("%d: %d %zu byte messages in %e s - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
+                me, n, bytes, totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime);
         fflush(stdout);
         MPI_Barrier(MPI_COMM_WORLD);
         free(reqs);
@@ -88,6 +103,9 @@ int main(int argc, char * argv[])
      *                            CLEAN UP
      *********************************************************************************/
 
+    MPI_Barrier( MPI_COMM_WORLD );
+    fflush(stdout);
+    sleep(1);
     MPI_Barrier( MPI_COMM_WORLD );
 
     double tt1 = MPI_Wtime();

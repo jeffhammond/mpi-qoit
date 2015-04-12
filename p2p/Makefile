@@ -1,12 +1,12 @@
 CC		= /opt/mpich/dev/intel/default/bin/mpicc
 #CC     := mpicc
-COPT   := -g -O2 -Wall -std=c99
+COPT   := -g -O2 -Wall -std=c99 -fopenmp
 
 LD      = $(CC)
 CFLAGS  = $(COPT) 
 CFLAGS += -DDEBUG=0
 
-LDFLAGS = $(COPT) $(CFLAGS)
+LDFLAGS = $(CFLAGS)
 LIBS    = 
 
 TESTS := driver.x
