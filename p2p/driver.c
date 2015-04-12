@@ -77,8 +77,8 @@ int main(int argc, char * argv[])
         //        n, count*sizeof(int), totaltime/reps, msgrate); fflush(stdout);
         totaltime /= reps;
         size_t bytes = count*sizeof(int);
-        printf("%d %zu byte messages in %lf us - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
-                n, bytes, 1.e6*totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime); fflush(stdout);
+        printf("%d %zu byte messages in %e s - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
+                n, bytes, totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime); fflush(stdout);
         free(reqs);
     }
 
