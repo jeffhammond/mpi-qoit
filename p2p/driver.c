@@ -38,10 +38,10 @@ int main(int argc, char * argv[])
     for (int count = 1; count<=maxcount; count*=2) {
         int n = maxcount/count;
         MPI_Request * reqs = malloc(2*n*sizeof(MPI_Request));
-        double totaltime = 0.0;
         int target = (me+1)%np;
         int origin = (me==0) ? (np-1) : me-1;
         int tag = 0;
+        double totaltime = 0.0;
         for (int r=0; r<reps; r++) {
             for (int i=0; i<maxcount; i++) {
                 sbuf[i] = me;
@@ -72,9 +72,13 @@ int main(int argc, char * argv[])
                 totaltime += (t1-t0);
             }
         }
-        double msgrate = (double)n*(double)reps/totaltime;
-        printf("sent %d messages of %zu bytes in %lf seconds - rate=%lf\n",
-                n, count*sizeof(int), totaltime/reps, msgrate); fflush(stdout);
+        //double msgrate = (double)n*(double)reps/totaltime;
+        //printf("sent %d messages of %zu bytes in %lf seconds - rate=%lf\n",
+        //        n, count*sizeof(int), totaltime/reps, msgrate); fflush(stdout);
+        totaltime /= reps;
+        size_t bytes = count*sizeof(int);
+        printf("%d %zu byte messages in %lf us - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
+                n, bytes, 1.e6*totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime); fflush(stdout);
         free(reqs);
     }
 
