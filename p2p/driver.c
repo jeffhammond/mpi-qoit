@@ -30,8 +30,8 @@ int main(int argc, char * argv[])
 
     int maxcount = (argc>1) ? atoi(argv[1]) : 1024;
     int reps     = (argc>2) ? atoi(argv[2]) : 10;
-    int * sbuf; //= malloc(maxcount*sizeof(int));
-    int * rbuf; //= malloc(maxcount*sizeof(int));
+    int * sbuf;
+    int * rbuf;
     MPI_Alloc_mem(maxcount*sizeof(int), MPI_INFO_NULL, &sbuf);
     MPI_Alloc_mem(maxcount*sizeof(int), MPI_INFO_NULL, &rbuf);
 
@@ -72,18 +72,15 @@ int main(int argc, char * argv[])
                 totaltime += (t1-t0);
             }
         }
-        //double msgrate = (double)n*(double)reps/totaltime;
-        //printf("sent %d messages of %zu bytes in %lf seconds - rate=%lf\n",
-        //        n, count*sizeof(int), totaltime/reps, msgrate); fflush(stdout);
-        totaltime /= reps;
+        totaltime /= reps; /* total time for one iteration */
         size_t bytes = count*sizeof(int);
         printf("%d %zu byte messages in %e s - %lf us latency - bandwidth %lf MiB/s - %lf MMPS\n",
-                n, bytes, totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime); fflush(stdout);
+                n, bytes, totaltime, 1.e6*totaltime/n, 1.e-6*n*bytes/totaltime, 1.e-6*n/totaltime);
+        fflush(stdout);
+        MPI_Barrier(MPI_COMM_WORLD);
         free(reqs);
     }
 
-    //free(rbuf);
-    //free(sbuf);
     MPI_Free_mem(rbuf);
     MPI_Free_mem(sbuf);
 
