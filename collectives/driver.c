@@ -77,6 +77,11 @@ int main(int argc, char *argv[])
     MPI_Comm_size( MPI_COMM_WORLD, &world_size );
     if (world_rank==0) printf("MPI test program running on %d ranks. \n", world_size);
 
+    char procname[MPI_MAX_PROCESSOR_NAME];
+    int pnlen;
+    MPI_Get_processor_name(procname,&pnlen);
+    printf("%d: processor name = %s\n", world_rank, procname);
+
     /*********************************************************************************
      *                            SETUP MPI COMMUNICATORS
      *********************************************************************************/
